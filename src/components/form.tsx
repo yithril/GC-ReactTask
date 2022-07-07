@@ -1,11 +1,12 @@
-import React, { SyntheticEvent, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { City } from '../interfaces/city';
 import './css/main.css';
 import Result from './result';
+import { api } from '../api/apiService';
+import { CityLatLon } from '../interfaces/cityLatLon';
 
 function CityForm(props:any) {
     const [city, setCity] = useState("");
-    const [data, setData] = useState({lat: "", lon: ""});
     const [cityData, setCityData] = useState<City | undefined>(undefined);
 
     const handleSubmit = (evt:any) => {
@@ -15,21 +16,18 @@ function CityForm(props:any) {
 
     function getCityLatLong(){
         const url = `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=5&appid=a800d5978d1ccafe375097237d6a4ef8`;
-        fetch(url)
-            .then((response) => response.json())
-            .then((json) => setData(json[0]))
-            .then((json) => getCityInfo(data.lat, data.lon))
-            .catch((error) => console.log(error));  
+        api<[CityLatLon]>(url)
+        .then(([CityLatLon] ) => {
+            getCityInfo([CityLatLon][0].lat, [CityLatLon][0].lon);
+          })
     }
 
     function getCityInfo(lat:String, lon:String) {
-        if(data !== undefined && data.lat !== "" && data.lon !== ""){
-            const url2 = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=a800d5978d1ccafe375097237d6a4ef8`;
-            fetch(url2)
-            .then((response) => response.json())
-            .then((json) => setCityData(json))
-            .catch((error) => console.log(error)); 
-        }
+        const url2 = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=a800d5978d1ccafe375097237d6a4ef8`;
+            api<City>(url2)
+                .then((city:City) => {
+                    setCityData(city);
+                })
     }
 
     return(
